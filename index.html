@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Personalize seu cartao de Heróis Versão PC</title>
+    <style>
+        :root {
+            --red: #ff3c3c; 
+            --bg-overlay: rgba(5, 5, 5, 0.7); 
+            --card-bg: rgba(20, 20, 20, 0.6);
+            --mago: #bf00ff; --tank: #ff8c00; --lutador: #00ffff; --assassino: #ff0000; --especial: #ffffff;
+            --current-accent: var(--red);
+        }
+
+        body::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10; background-size: 100% 4px, 3px 100%; pointer-events: none;
+        }
+
+        body { 
+            background: #0a0a0a;
+            background-image: linear-gradient(var(--bg-overlay), var(--bg-overlay)), 
+                              url('');
+            background-size: cover; color: white; font-family: 'Courier New', monospace; 
+            display: flex; margin: 0; height: 100vh; overflow: hidden; 
+        }
+
+        /* SIDEBAR */
+        .sidebar { width: 300px; border-right: 1px solid var(--red); padding: 20px; display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 5; }
+        .lista-agentes { flex: 1; overflow-y: auto; margin: 20px 0; padding-right: 5px; }
+        .item-agente { padding: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; cursor: grab; transition: 0.3s; background: rgba(255, 255, 255, 0.02); }
+        .item-agente.active { border-left: 5px solid var(--current-accent); background: rgba(255, 255, 255, 0.05); }
+        .item-agente.dragging { opacity: 0.4; border: 1px dashed var(--current-accent); }
+
+        /* MAIN & CARD */
+        .main { flex: 1; padding: 40px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
+        .controles { align-self: flex-start; margin-bottom: 20px; display: flex; gap: 15px; }
+        .btn { background: transparent; border: 1px solid var(--red); color: var(--red); padding: 10px 20px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
+        .btn:hover { background: var(--red); color: black; box-shadow: 0 0 15px var(--red); }
+
+        .cartao { display: flex; gap: 30px; padding: 30px; width: 950px; min-height: 480px; border: 1px solid var(--red); background: var(--card-bg); transition: 0.5s; position: relative; }
+        .cartao.kia-mode { filter: grayscale(1) contrast(0.8); opacity: 0.7; border-color: #444 !important; }
+
+        .foto-box { width: 250px; height: 330px; border: 2px solid var(--current-accent); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; cursor: pointer; background-color: #000; box-shadow: 0 0 10px var(--current-accent), inset 0 0 5px var(--current-accent); transition: 0.3s; }
+        .foto-box:hover { box-shadow: 0 0 30px var(--current-accent), inset 0 0 15px var(--current-accent); }
+
+        .dados { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .input-nome { font-size: 28px; color: var(--current-accent); background: none; border: none; border-bottom: 2px solid var(--current-accent); outline: none; width: 100%; margin-bottom: 15px; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; }
+        .campo { display: flex; flex-direction: column; }
+        label { font-size: 10px; color: #888; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        input, select, textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px; outline: none; font-family: inherit; }
+
+        /* STATS FIX */
+        .stats-container { margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+        .stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .stat-label { width: 60px; font-size: 10px; color: #aaa; }
+        .stat-bar-bg { flex: 1; height: 8px; background: #222; position: relative; }
+        .stat-fill { height: 100%; background: var(--current-accent); transition: 0.5s; box-shadow: 0 0 8px var(--current-accent); }
+        .stat-pct { width: 35px; font-size: 10px; text-align: right; color: var(--current-accent); }
+
+        textarea { resize: none; flex: 1; min-height: 80px; margin-top: 5px; }
+
+        /* THEMES */
+        .n-mago { --current-accent: var(--mago); border-color: var(--mago); }
+        .n-tank { --current-accent: var(--tank); border-color: var(--tank); }
+        .n-lutador { --current-accent: var(--lutador); border-color: var(--lutador); }
+        .n-assassino { --current-accent: var(--assassino); border-color: var(--assassino); }
+        .n-especial { --current-accent: var(--especial); border-color: var(--especial); }
+
+        .loading-effect { animation: slideFade 0.4s ease-out; }
+        @keyframes slideFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2 style="color:var(--red); text-shadow: 0 0 10px var(--red); font-size: 18px;">SISTEMA_DE_RECRUTAGEM_DE
+            _HEROIS</h2>
+        <div class="lista-agentes" id="listaAgentes"></div>
+        <button class="btn" onclick="UI.novo()">+ NOVO RECRUTA</button>
+    </div>
+
+    <div class="main">
+        <div class="controles">
+            <button class="btn" onclick="App.salvar()">TRANSFERIR DADOS</button>
+            <button class="btn" id="btnKia" onclick="UI.toggleKia()">STATUS: ATIVO</button>
+            <button class="btn" style="border-color:#444" onclick="App.deletar()">ELIMINAR</button>
+        </div>
+
+        <div class="cartao" id="cartao">
+            <div class="foto-box" id="foto" onclick="UI.uploadFoto()">
+                <span id="fotoPlaceholder">UPLOAD_IMG</span>
+            </div>
+
+            <div class="dados" id="dadosAgente">
+                <input type="text" id="nome" class="input-nome" placeholder="NOME_DO_AGENTE">
+                
+                <div class="grid">
+                    <div class="campo"><label>CLASSE_SISTEMA</label>
+                        <select id="classe" onchange="UI.atualizarEstilo()">
+                            <option value="">SELECIONE...</option>
+                            <option value="mago">MAGO</option>
+                            <option value="tank">TANK</option>
+                            <option value="lutador">LUTADOR</option>
+                            <option value="assassino">ASSASSINO</option>
+                            <option value="especial">ESPECIAL</option>
+                        </select>
+                    </div>
+                    <div class="campo"><label>HABILIDADE_PRINCIPAL</label><input type="text" id="poder" placeholder="DESCREVER PODER..."></div>
+                    <div class="campo"><label>IDADE</label><input type="number" id="idade"></div>
+                    <div class="campo"><label>ESTADO_CIVIL</label>
+                        <select id="civil">
+                            <option value="desconhecido">DESCONHECIDO</option>
+                            <option value="solteiro">SOLTEIRO(A)</option>
+                            <option value="casado">CASADO(A)</option>
+                            <option value="divorciado">DIVORCIADO(A)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="campo">
+                    <label>NÍVEL_COMBATE</label>
+                    <input type="range" id="nivel" min="0" max="100" value="50" oninput="UI.atualizarStats()" style="width: 100%; margin: 10px 0;">
+                </div>
+
+                <div class="stats-container">
+                    <div class="stat-row">
+                        <span class="stat-label">ATAQUE</span>
+                        <div class="stat-bar-bg"><div class="stat-fill" id="bar-atk"></div></div>
+                        <span class="stat-pct" id="pct-atk">0%</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">DEFESA</span>
+                        <div class="stat-bar-bg"><div class="stat-fill" id="bar-def"></div></div>
+                        <span class="stat-pct" id="pct-def">0%</span>
+                    </div>
+                </div>
+
+                <div class="campo" style="flex: 1; display: flex; flex-direction: column;">
+                    <label>BIOGRAFIA / OBSERVAÇÕES</label>
+                    <textarea id="notes" placeholder="REGISTAR DETALHES ADICIONAIS..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const App = {
+            agentes: JSON.parse(localStorage.getItem('NexusDB')) || [],
+            atualId: null,
+
+            salvar() {
+                const nome = document.getElementById('nome').value;
+                if(!nome) return alert("ERRO: NOME REQUERIDO");
+                const agente = {
+                    id: this.atualId || Date.now(),
+                    nome: nome,
+                    classe: document.getElementById('classe').value,
+                    poder: document.getElementById('poder').value,
+                    idade: document.getElementById('idade').value,
+                    civil: document.getElementById('civil').value,
+                    nivel: document.getElementById('nivel').value,
+                    notes: document.getElementById('notes').value,
+                    foto: UI.fotoUrl,
+                    kia: UI.isKia
+                };
+                const index = this.agentes.findIndex(a => a.id === this.atualId);
+                if(index > -1) this.agentes[index] = agente;
+                else { this.agentes.push(agente); this.atualId = agente.id; }
+                this.sincronizar();
+                UI.renderizarLista();
+            },
+            sincronizar() { localStorage.setItem('NexusDB', JSON.stringify(this.agentes)); },
+            deletar() {
+                if(!this.atualId || !confirm("ELIMINAR REGISTRO?")) return;
+                this.agentes = this.agentes.filter(a => a.id !== this.atualId);
+                this.sincronizar();
+                UI.novo();
+            }
+        };
+
+        const UI = {
+            fotoUrl: "", isKia: false,
+            uploadFoto() {
+                const url = prompt("URL DA IMAGEM:");
+                if(url) { this.fotoUrl = url; document.getElementById('foto').style.backgroundImage = `url(${url})`; document.getElementById('fotoPlaceholder').style.display = "none"; }
+            },
+            atualizarEstilo() {
+                const c = document.getElementById('classe').value;
+                const card = document.getElementById('cartao');
+                card.className = "cartao " + (c ? "n-" + c : "");
+                if(this.isKia) card.classList.add('kia-mode');
+                this.atualizarStats();
+            },
+            atualizarStats() {
+                const n = document.getElementById('nivel').value;
+                const c = document.getElementById('classe').value;
+                let a = n, d = n;
+                
+                // Bónus por classe
+                if(c === 'mago') a = Math.min(100, n * 1.2);
+                if(c === 'tank') d = Math.min(100, n * 1.2);
+                if(c === 'assassino') a = Math.min(100, n * 1.4);
+
+                document.getElementById('bar-atk').style.width = a + "%";
+                document.getElementById('bar-def').style.width = d + "%";
+                document.getElementById('pct-atk').innerText = Math.round(a) + "%";
+                document.getElementById('pct-def').innerText = Math.round(d) + "%";
+            },
+            toggleKia() {
+                this.isKia = !this.isKia;
+                const btn = document.getElementById('btnKia');
+                const card = document.getElementById('cartao');
+                btn.innerText = this.isKia ? "STATUS: KIA" : "STATUS: ATIVO";
+                if(this.isKia) card.classList.add('kia-mode');
+                else card.classList.remove('kia-mode');
+            },
+            
+            initDragAndDrop() {
+                const lista = document.getElementById('listaAgentes');
+                let draggingItem = null;
+                lista.addEventListener('dragstart', (e) => { draggingItem = e.target; e.target.classList.add('dragging'); });
+                lista.addEventListener('dragend', (e) => {
+                    e.target.classList.remove('dragging');
+                    const novosItens = [...lista.querySelectorAll('.item-agente')];
+                    App.agentes = novosItens.map(item => App.agentes.find(a => a.id == item.getAttribute('data-id')));
+                    App.sincronizar();
+                });
+                lista.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    const draggableElements = [...lista.querySelectorAll('.item-agente:not(.dragging)')];
+                    const afterElement = draggableElements.reduce((closest, child) => {
+                        const box = child.getBoundingClientRect();
+                        const offset = e.clientY - box.top - box.height / 2;
+                        if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+                        else return closest;
+                    }, { offset: Number.NEGATIVE_INFINITY }).element;
+                    if (afterElement == null) lista.appendChild(draggingItem);
+                    else lista.insertBefore(draggingItem, afterElement);
+                });
+            },
+
+            renderizarLista() {
+                const lista = document.getElementById('listaAgentes');
+                lista.innerHTML = App.agentes.map(a => `
+                    <div class="item-agente ${a.id === App.atualId ? 'active' : ''}" 
+                         draggable="true" data-id="${a.id}"
+                         onclick="UI.carregar(${a.id})" 
+                         style="--current-accent: var(--${a.classe || 'red'})">
+                        <div><strong>${a.nome}</strong><br><small>${a.classe.toUpperCase()} ${a.kia ? '[KIA]' : ''}</small></div>
+                    </div>
+                `).join('');
+                this.initDragAndDrop();
+            },
+
+            carregar(id) {
+                const a = App.agentes.find(x => x.id === id);
+                App.atualId = a.id;
+                const dadosContainer = document.getElementById('dadosAgente');
+                dadosContainer.classList.remove('loading-effect');
+                void dadosContainer.offsetWidth;
+                dadosContainer.classList.add('loading-effect');
+
+                document.getElementById('nome').value = a.nome;
+                document.getElementById('classe').value = a.classe;
+                document.getElementById('poder').value = a.poder;
+                document.getElementById('idade').value = a.idade;
+                document.getElementById('civil').value = a.civil;
+                document.getElementById('nivel').value = a.nivel;
+                document.getElementById('notes').value = a.notes;
+                
+                this.fotoUrl = a.foto;
+                document.getElementById('foto').style.backgroundImage = a.foto ? `url(${a.foto})` : "";
+                document.getElementById('fotoPlaceholder').style.display = a.foto ? "none" : "block";
+                
+                this.isKia = a.kia;
+                document.getElementById('btnKia').innerText = this.isKia ? "STATUS: KIA" : "STATUS: ATIVO";
+                if(this.isKia) document.getElementById('cartao').classList.add('kia-mode');
+                else document.getElementById('cartao').classList.remove('kia-mode');
+
+                this.atualizarEstilo();
+                this.renderizarLista();
+            },
+            novo() {
+                App.atualId = null; this.fotoUrl = ""; this.isKia = false;
+                document.querySelectorAll('input, select, textarea').forEach(i => i.value = "");
+                document.getElementById('foto').style.backgroundImage = "";
+                document.getElementById('fotoPlaceholder').style.display = "block";
+                document.getElementById('btnKia').innerText = "STATUS: ATIVO";
+                document.getElementById('cartao').classList.remove('kia-mode');
+                this.atualizarEstilo();
+                this.renderizarLista();
+            }
+        };
+
+        window.onload = () => UI.renderizarLista();
+    </script>
+</body>
+</html>
